@@ -204,7 +204,29 @@ open class Session {
         session.invalidateAndCancel()
     }
 
-    // MARK: - Cancellation
+    // MARK: - All Requests API
+
+    /// Perform an action on all active `Request`s, optionally calling a completion handler when complete.
+    ///
+    /// - Note: The provided `action` closure is performed asynchronously, meaning that some `Request`s may complete and
+    ///         be unavailable by time it runs. Additionally, these actions are performed on the instances's `rootQueue`,
+    ///         so care should be taken that actions are fast.
+    ///
+    /// - Parameters:
+    ///   - queue:      `DispatchQueue` on which the completion handler is called. `.main` by default.
+    ///   - action:     Closure to perform on each `Request`.
+    ///   - completion: Closure to be called when `action` has been called on all `Request`s. `nil` by default.
+    public func withAllRequests(completingOn queue: DispatchQueue = .main,
+                                perform action: @escaping (Request) -> Void,
+                                completion: (() -> Void)? = nil) {
+        rootQueue.async {
+            self.activeRequests.forEach(action)
+
+            if let completion = completion {
+                queue.async(execute: completion)
+            }
+        }
+    }
 
     /// Cancel all active `Request`s, optionally calling a completion handler when complete.
     ///
@@ -216,10 +238,7 @@ open class Session {
     ///   - queue:      `DispatchQueue` on which the completion handler is run. `.main` by default.
     ///   - completion: Closure to be called when all `Request`s have been cancelled.
     public func cancelAllRequests(completingOnQueue queue: DispatchQueue = .main, completion: (() -> Void)? = nil) {
-        rootQueue.async {
-            self.activeRequests.forEach { $0.cancel() }
-            queue.async { completion?() }
-        }
+        withAllRequests(completingOn: queue, perform: { $0.cancel() }, completion: completion)
     }
 
     // MARK: - DataRequest
