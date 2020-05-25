@@ -219,7 +219,7 @@ session.cancelAllRequests(completingOn: .main) {
 }
 ```
 
-> Note: These actions are performed asynchronously, so requests may be created or have finished by the time it's actually run, so it should be assumed the action will be performed on a particular set of `Request`s.
+> Note: These actions are performed asynchronously, so requests may be created or have finished by the time it's actually run, so it should not be assumed the action will be performed on a particular set of `Request`s.
 
 ### Creating Instances From `URLSession`s
 In addition to the `convenience` initializer mentioned previously, `Session`s can be initialized directly from `URLSession`s. However, there are several requirements to keep in mind when using this initializer, so using the convenience initializer is recommended. These include:
