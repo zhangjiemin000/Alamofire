@@ -873,7 +873,9 @@ public class Request {
 
     /// Sets a closure to be called whenever the instance creates a `URLSessionTask`.
     ///
-    /// - Note: This closure may be called multiple times if the instance is retried.
+    /// - Note: This API should only be used to provide `URLSessionTask`s to existing API, like `NSFileProvider`. It
+    ///         **SHOULD NOT** be used to interact with tasks directly, as that may be break Alamofire features.
+    ///         Additionally, this closure may be called multiple times if the instance is retried. 
     ///
     /// - Parameters:
     ///   - queue:   `DispatchQueue` on which `handler` will be called. `.main` by default.
