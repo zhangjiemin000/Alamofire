@@ -1130,3 +1130,39 @@ final class RequestCURLDescriptionTestCase: BaseTestCase {
             .filter { $0 != "" && $0 != "\\" }
     }
 }
+
+final class RequestLifeTimeTests: BaseTestCase {
+    func testThatRequestProvidesURLRequestWhenCreated() {
+        // Given
+        let didReceiveRequest = expectation(description: "did receive task")
+        let didComplete = expectation(description: "request did complete")
+        var request: URLRequest?
+
+        // When
+        AF.request(URLRequest.makeHTTPBinRequest())
+            .onURLRequestCreation { request = $0; didReceiveRequest.fulfill() }
+            .responseDecodable(of: HTTPBinResponse.self) { _ in didComplete.fulfill() }
+
+        wait(for: [didReceiveRequest, didComplete], timeout: timeout, enforceOrder: true)
+
+        // Then
+        XCTAssertNotNil(request)
+    }
+
+    func testThatRequestProvidesTaskWhenCreated() {
+        // Given
+        let didReceiveTask = expectation(description: "did receive task")
+        let didComplete = expectation(description: "request did complete")
+        var task: URLSessionTask?
+
+        // When
+        AF.request(URLRequest.makeHTTPBinRequest())
+            .onURLSessionTaskCreation { task = $0; didReceiveTask.fulfill() }
+            .responseDecodable(of: HTTPBinResponse.self) { _ in didComplete.fulfill() }
+
+        wait(for: [didReceiveTask, didComplete], timeout: timeout, enforceOrder: true)
+
+        // Then
+        XCTAssertNotNil(task)
+    }
+}
