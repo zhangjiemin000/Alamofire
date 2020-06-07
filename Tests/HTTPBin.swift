@@ -25,11 +25,20 @@
 import Alamofire
 import Foundation
 
+extension Int {
+    static let port = 8080
+}
+
 extension String {
-    static let httpBinURLString = "https://httpbin.org"
+    static let scheme = "http"
+    static let httpBinDomain = "127.0.0.1"
+    static let port = "\(Int.port)"
+    static let httpBinURLString = "\(scheme)://\(httpBinDomain):\(port)"
+    static let nonexistentDomain = "https://nonexistent-domain.org"
 }
 
 extension URL {
+    static let nonexistentDomain = URL(string: .nonexistentDomain)!
     static func makeHTTPBinURL(path: String = "get") -> URL {
         let url = URL(string: .httpBinURLString)!
         return url.appendingPathComponent(path)

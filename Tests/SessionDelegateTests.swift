@@ -40,8 +40,8 @@ class SessionDelegateTestCase: BaseTestCase {
 
     func testThatRequestWillPerformHTTPRedirectionByDefault() {
         // Given
-        let redirectURLString = "https://www.apple.com/"
-        let urlString = "https://httpbin.org/redirect-to?url=\(redirectURLString)"
+        let redirectURLString = URL.makeHTTPBinURL().absoluteString
+        let urlString = "\(String.httpBinURLString)/redirect-to?url=\(redirectURLString)"
 
         let expectation = self.expectation(description: "Request should redirect to \(redirectURLString)")
 
@@ -54,7 +54,7 @@ class SessionDelegateTestCase: BaseTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)
@@ -68,8 +68,8 @@ class SessionDelegateTestCase: BaseTestCase {
 
     func testThatRequestWillPerformRedirectionMultipleTimesByDefault() {
         // Given
-        let redirectURLString = "https://httpbin.org/get"
-        let urlString = "https://httpbin.org/redirect/5"
+        let redirectURLString = "\(String.httpBinURLString)/get"
+        let urlString = "\(String.httpBinURLString)/redirect/5"
 
         let expectation = self.expectation(description: "Request should redirect to \(redirectURLString)")
 
@@ -82,7 +82,7 @@ class SessionDelegateTestCase: BaseTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)
@@ -107,7 +107,7 @@ class SessionDelegateTestCase: BaseTestCase {
         let expect = expectation(description: "request should complete")
 
         // When
-        let request = session.request("https://httpbin.org/get").response { response in
+        let request = session.request(URLRequest.makeHTTPBinRequest()).response { response in
             requestResponse = response
             expect.fulfill()
         }
@@ -138,7 +138,7 @@ class SessionDelegateTestCase: BaseTestCase {
 
         request.resume()
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(resumedRequest)
@@ -161,7 +161,7 @@ class SessionDelegateTestCase: BaseTestCase {
         let expect = expectation(description: "request should complete")
 
         // When
-        let request = session.download("https://httpbin.org/get").response { response in
+        let request = session.download(URLRequest.makeHTTPBinRequest()).response { response in
             requestResponse = response
             expect.fulfill()
         }
@@ -192,7 +192,7 @@ class SessionDelegateTestCase: BaseTestCase {
 
         request.resume()
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(resumedRequest)

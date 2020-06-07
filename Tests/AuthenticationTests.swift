@@ -58,7 +58,7 @@ class AuthenticationTestCase: BaseTestCase {
 class BasicAuthenticationTestCase: AuthenticationTestCase {
     override func setUp() {
         super.setUp()
-        urlString = "https://httpbin.org/basic-auth/\(user)/\(password)"
+        urlString = "\(String.httpBinURLString)/basic-auth/\(user)/\(password)"
     }
 
     func testHTTPBasicAuthenticationWithInvalidCredentials() {
@@ -75,7 +75,7 @@ class BasicAuthenticationTestCase: AuthenticationTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)
@@ -99,7 +99,37 @@ class BasicAuthenticationTestCase: AuthenticationTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
+
+        // Then
+        XCTAssertNotNil(response?.request)
+        XCTAssertNotNil(response?.response)
+        XCTAssertEqual(response?.response?.statusCode, 200)
+        XCTAssertNotNil(response?.data)
+        XCTAssertNil(response?.error)
+    }
+
+    func testHTTPBasicAuthenticationWithStoredCredentials() {
+        // Given
+        let expectation = self.expectation(description: "\(urlString) 200")
+
+        var response: DataResponse<Data?, AFError>?
+
+        // When
+        let credential = URLCredential(user: user, password: password, persistence: .forSession)
+        URLCredentialStorage.shared.setDefaultCredential(credential,
+                                                         for: .init(host: .httpBinDomain,
+                                                                    port: .port,
+                                                                    protocol: .scheme,
+                                                                    realm: .httpBinDomain,
+                                                                    authenticationMethod: NSURLAuthenticationMethodHTTPBasic))
+        manager.request(urlString)
+            .response { resp in
+                response = resp
+                expectation.fulfill()
+            }
+
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)
@@ -111,7 +141,7 @@ class BasicAuthenticationTestCase: AuthenticationTestCase {
 
     func testHiddenHTTPBasicAuthentication() {
         // Given
-        let urlString = "http://httpbin.org/hidden-basic-auth/\(user)/\(password)"
+        let urlString = "\(String.httpBinURLString)/hidden-basic-auth/\(user)/\(password)"
         let expectation = self.expectation(description: "\(urlString) 200")
         let headers: HTTPHeaders = [.authorization(username: user, password: password)]
 
@@ -124,7 +154,7 @@ class BasicAuthenticationTestCase: AuthenticationTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)
@@ -142,7 +172,7 @@ class HTTPDigestAuthenticationTestCase: AuthenticationTestCase {
 
     override func setUp() {
         super.setUp()
-        urlString = "https://httpbin.org/digest-auth/\(qop)/\(user)/\(password)"
+        urlString = "\(String.httpBinURLString)/digest-auth/\(qop)/\(user)/\(password)"
     }
 
     func testHTTPDigestAuthenticationWithInvalidCredentials() {
@@ -159,7 +189,7 @@ class HTTPDigestAuthenticationTestCase: AuthenticationTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)
@@ -183,7 +213,7 @@ class HTTPDigestAuthenticationTestCase: AuthenticationTestCase {
                 expectation.fulfill()
             }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(response?.request)

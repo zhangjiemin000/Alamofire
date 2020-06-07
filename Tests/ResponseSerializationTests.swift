@@ -1080,7 +1080,7 @@ final class CustomResponseSerializerTests: BaseTestCase {
             expectation.fulfill()
         }
 
-        waitForExpectations(timeout: timeout, handler: nil)
+        waitForExpectations(timeout: timeout)
 
         // Then
         XCTAssertNotNil(data)
@@ -1263,7 +1263,7 @@ final class DataPreprocessorTests: BaseTestCase {
 
 extension HTTPURLResponse {
     convenience init(statusCode: Int, headers: HTTPHeaders? = nil) {
-        let url = URL(string: "https://httpbin.org/get")!
-        self.init(url: url, statusCode: statusCode, httpVersion: "HTTP/1.1", headerFields: headers?.dictionary)!
+        let url = URL.makeHTTPBinURL()
+        self.init(url: url, statusCode: statusCode, httpVersion: String(kCFHTTPVersion1_1), headerFields: headers?.dictionary)!
     }
 }
