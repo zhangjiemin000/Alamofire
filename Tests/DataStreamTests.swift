@@ -28,7 +28,7 @@ import XCTest
 final class DataStreamTests: BaseTestCase {
     func testThatDataCanBeStreamedOnMainQueue() {
         // Given
-        let expectedSize = 1
+        let expectedSize = 10
         var accumulatedData = Data()
         var response: HTTPURLResponse?
         var streamOnMain = false
@@ -58,6 +58,89 @@ final class DataStreamTests: BaseTestCase {
         // Then
         XCTAssertEqual(response?.statusCode, 200)
         XCTAssertEqual(accumulatedData.count, expectedSize)
+        XCTAssertTrue(streamOnMain)
+        XCTAssertTrue(completeOnMain)
+    }
+
+    func testThatDataCanBeStreamedByByte() {
+        // Given
+        let expectedSize = 10
+        var accumulatedData = Data()
+        var response: HTTPURLResponse?
+        var streamOnMain = false
+        var completeOnMain = false
+        var streamCalled = 0
+        let didReceive = expectation(description: "stream should receive once")
+        didReceive.expectedFulfillmentCount = expectedSize
+        let didComplete = expectation(description: "stream should complete")
+
+        // When
+        AF.streamRequest(URLRequest.makeHTTPBinRequest(path: "chunked/\(expectedSize)")).responseStream { stream in
+            switch stream.event {
+            case let .stream(result):
+                streamOnMain = Thread.isMainThread
+                switch result {
+                case let .success(data):
+                    accumulatedData.append(data)
+                }
+                streamCalled += 1
+                didReceive.fulfill()
+            case let .complete(completion):
+                completeOnMain = Thread.isMainThread
+                response = completion.response
+                didComplete.fulfill()
+            }
+        }
+
+        wait(for: [didReceive, didComplete], timeout: timeout, enforceOrder: true)
+
+        // Then
+        XCTAssertEqual(response?.statusCode, 200)
+        XCTAssertEqual(streamCalled, expectedSize)
+        XCTAssertEqual(accumulatedData.count, expectedSize)
+        XCTAssertTrue(streamOnMain)
+        XCTAssertTrue(completeOnMain)
+    }
+
+    func testThatDataCanBeStreamedAsMultipleJSONPayloads() {
+        // Given
+        let expectedSize = 10
+        var responses: [HTTPBinResponse] = []
+        var response: HTTPURLResponse?
+        var streamOnMain = false
+        var completeOnMain = false
+        var streamCalled = 0
+        let didReceive = expectation(description: "stream should receive once")
+        didReceive.expectedFulfillmentCount = expectedSize
+        let didComplete = expectation(description: "stream should complete")
+
+        // When
+        AF.streamRequest(URLRequest.makeHTTPBinRequest(path: "payloads/\(expectedSize)"))
+            .responseStreamDecodable(of: HTTPBinResponse.self) { stream in
+                switch stream.event {
+                case let .stream(result):
+                    streamOnMain = Thread.isMainThread
+                    switch result {
+                    case let .success(value):
+                        responses.append(value)
+                    case let .failure(error):
+                        XCTFail("JSON stream failed due to error: \(error.localizedDescription)")
+                    }
+                    streamCalled += 1
+                    didReceive.fulfill()
+                case let .complete(completion):
+                    completeOnMain = Thread.isMainThread
+                    response = completion.response
+                    didComplete.fulfill()
+                }
+            }
+
+        wait(for: [didReceive, didComplete], timeout: timeout, enforceOrder: true)
+
+        // Then
+        XCTAssertEqual(response?.statusCode, 200)
+        XCTAssertEqual(streamCalled, expectedSize)
+        XCTAssertEqual(responses.count, expectedSize)
         XCTAssertTrue(streamOnMain)
         XCTAssertTrue(completeOnMain)
     }
