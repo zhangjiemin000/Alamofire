@@ -51,12 +51,15 @@ public class Request {
             switch (self, state) {
             case (.initialized, _):
                 return true
-            case (_, .initialized), (.cancelled, _), (.finished, _):
+            case (_, .initialized), (.cancelled, _), (.finished, _):  //这三个应该是终端的事件了
                 return false
             case (.resumed, .cancelled), (.suspended, .cancelled), (.resumed, .suspended), (.suspended, .resumed):
+                //resumed 转 cancel， suspend 转cancel，resumed转suspend，suspend转resume 都是可以的
                 return true
+                //这个不允许
             case (.suspended, .suspended), (.resumed, .resumed):
                 return false
+                //啥状态转finish都是可以的
             case (_, .finished):
                 return true
             }
@@ -199,6 +202,8 @@ public class Request {
 
     /// `URLRequest`s from all of the `URLSessionTask`s executed on behalf of the `Request`. May be different from
     /// `requests` due to `URLSession` manipulation.
+    /// 这里的read是加锁
+    /// 这里的意思是： 对mutableState的tasks数组中，task的currentResult不为nil的对象，重新组成一个数组
     public var performedRequests: [URLRequest] { $mutableState.read { $0.tasks.compactMap { $0.currentRequest } } }
 
     // MARK: HTTPURLResponse
@@ -216,17 +221,20 @@ public class Request {
     /// Last `URLSessionTask` crated on behalf of the `Request`.
     public var lastTask: URLSessionTask? { tasks.last }
     /// Current `URLSessionTask` created on behalf of the `Request`.
+    /// task直接指向lastTask
     public var task: URLSessionTask? { lastTask }
 
     // MARK: Metrics
 
     /// All `URLSessionTaskMetrics` gathered on behalf of the `Request`. Should correspond to the `tasks` created.
+    /// 所有的SessionTask的参数
     public var allMetrics: [URLSessionTaskMetrics] { mutableState.metrics }
     /// First `URLSessionTaskMetrics` gathered on behalf of the `Request`.
     public var firstMetrics: URLSessionTaskMetrics? { allMetrics.first }
     /// Last `URLSessionTaskMetrics` gathered on behalf of the `Request`.
     public var lastMetrics: URLSessionTaskMetrics? { allMetrics.last }
     /// Current `URLSessionTaskMetrics` gathered on behalf of the `Request`.
+    /// 同样直接返回最后一个请求的参数
     public var metrics: URLSessionTaskMetrics? { lastMetrics }
 
     // MARK: Retry Count
@@ -276,9 +284,9 @@ public class Request {
     /// - Parameter request: The `URLRequest` created.
     func didCreateInitialURLRequest(_ request: URLRequest) {
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
-
+        //加锁，加入request
         $mutableState.write { $0.requests.append(request) }
-
+        //事件，创建了request
         eventMonitor?.request(self, didCreateInitialURLRequest: request)
     }
 
@@ -291,7 +299,7 @@ public class Request {
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
 
         self.error = error
-
+        //通知代理对象
         eventMonitor?.request(self, didFailToCreateURLRequestWithError: error)
 
         callCURLHandlerIfNecessary()
@@ -356,6 +364,8 @@ public class Request {
     ///
     /// - Parameter task: The `URLSessionTask` created.
     func didCreateTask(_ task: URLSessionTask) {
+        //确保调用时，是在underlyingQueue上的
+        //不满足条件就会跪
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
 
         $mutableState.write { $0.tasks.append(task) }
@@ -398,7 +408,7 @@ public class Request {
     /// Called when cancellation is completed, sets `error` to `AFError.explicitlyCancelled`.
     func didCancel() {
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
-
+        //如果被Cancel掉了，则判断error是否为空，如果为空，则传入新建的Cancel错误
         error = error ?? AFError.explicitlyCancelled
 
         eventMonitor?.requestDidCancel(self)
@@ -407,6 +417,7 @@ public class Request {
     /// Called when a `URLSessionTask` is cancelled on behalf of the instance.
     ///
     /// - Parameter task: The `URLSessionTask` cancelled.
+    /// cancel task，注意要区分task 和 session
     func didCancelTask(_ task: URLSessionTask) {
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
 
@@ -473,11 +484,10 @@ public class Request {
     /// call `finish()`.
     ///
     /// - Parameter error: The possible `AFError` which may trigger retry.
+    /// Retry还是finish，交给用户，使用的是代理，RetryResult枚举封装了retry的类型
     func retryOrFinish(error: AFError?) {
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
-
         guard let error = error, let delegate = delegate else { finish(); return }
-
         delegate.retryResult(for: self, dueTo: error) { retryResult in
             switch retryResult {
             case .doNotRetry:
@@ -842,13 +852,13 @@ public class Request {
 }
 
 // MARK: - Protocol Conformances
-
+// 重写 == 操作符
 extension Request: Equatable {
     public static func ==(lhs: Request, rhs: Request) -> Bool {
         lhs.id == rhs.id
     }
 }
-
+//重写hashable 的值
 extension Request: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
@@ -890,7 +900,8 @@ extension Request {
                                                      protocol: url.scheme,
                                                      realm: host,
                                                      authenticationMethod: NSURLAuthenticationMethodHTTPBasic)
-
+            //保存用户的验证信息，是从系统的protectionSpace中拿到的。
+            //然后从系统credentialStorage中通过space来找到。
             if let credentials = credentialStorage.credentials(for: protectionSpace)?.values {
                 for credential in credentials {
                     guard let user = credential.user, let password = credential.password else { continue }

@@ -138,6 +138,7 @@ extension DataResponse {
     /// - returns: A `DataResponse` whose result wraps the value returned by the given closure. If this instance's
     ///            result is a failure, returns a response wrapping the same failure.
     public func map<NewSuccess>(_ transform: (Success) -> NewSuccess) -> DataResponse<NewSuccess, Failure> {
+        //重新蛇生成一个Response，区别就是不同的Result
         DataResponse<NewSuccess, Failure>(request: request,
                                           response: response,
                                           data: data,

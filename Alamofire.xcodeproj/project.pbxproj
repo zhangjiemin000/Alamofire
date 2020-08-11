@@ -476,7 +476,7 @@
 		4CFB02EB1D7D2FA20056F249 /* invalid_data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = invalid_data.json; sourceTree = "<group>"; };
 		4CFB02EC1D7D2FA20056F249 /* valid_data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = valid_data.json; sourceTree = "<group>"; };
 		4CFB02F21D7D2FA20056F249 /* empty_string.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = empty_string.txt; sourceTree = "<group>"; };
-		4CFB02F31D7D2FA20056F249 /* utf32_string.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = utf32_string.txt; sourceTree = "<group>"; };
+		4CFB02F31D7D2FA20056F249 /* utf32_string.txt */ = {isa = PBXFileReference; fileEncoding = 2617245952; lastKnownFileType = text; path = utf32_string.txt; sourceTree = "<group>"; };
 		4CFB02F41D7D2FA20056F249 /* utf8_string.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = utf8_string.txt; sourceTree = "<group>"; };
 		4CFD6B132201338E00FFB5E3 /* CachedResponseHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedResponseHandlerTests.swift; sourceTree = "<group>"; };
 		4DD67C0B1A5C55C900ED2280 /* Alamofire.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Alamofire.framework; sourceTree = BUILT_PRODUCTS_DIR; };
