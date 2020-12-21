@@ -236,9 +236,11 @@ open class Session {
         let requestModifier: RequestModifier?
 
         func asURLRequest() throws -> URLRequest {
+            //这个就是直接从URL和method以及Header中生成对应的Request
             var request = try URLRequest(url: url, method: method, headers: headers)
+            //然后，如果有requestModifier，这里就可以开始进行修改
             try requestModifier?(&request)
-
+            // 最后，如果需要enconding转换，则转换
             return try encoding.encode(request, with: parameters)
         }
     }
@@ -265,6 +267,8 @@ open class Session {
                       headers: HTTPHeaders? = nil,
                       interceptor: RequestInterceptor? = nil,
                       requestModifier: RequestModifier? = nil) -> DataRequest {
+        //创建一个RequestConvertible的对象
+        //Almarmofire除了定义了这个之外，也定了自己的RequestConvertible结构体
         let convertible = RequestConvertible(url: convertible,
                                              method: method,
                                              parameters: parameters,
@@ -272,6 +276,7 @@ open class Session {
                                              headers: headers,
                                              requestModifier: requestModifier)
 
+        //生成了一个requestConvertible之后，再处理interceptor
         return request(convertible, interceptor: interceptor)
     }
 

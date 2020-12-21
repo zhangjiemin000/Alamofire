@@ -187,6 +187,7 @@ public struct URLEncoding: ParameterEncoding {
     /// - Returns: The percent-escaped, URL encoded query string components.
     public func queryComponents(fromKey key: String, value: Any) -> [(String, String)] {
         var components: [(String, String)] = []
+        //遍历一个Any属性的方便的 用法 用switch
         switch value {
         case let dictionary as [String: Any]:
             for (nestedKey, value) in dictionary {
@@ -198,6 +199,7 @@ public struct URLEncoding: ParameterEncoding {
             }
         case let number as NSNumber:
             if number.isBool {
+                //escape用于将key中的特殊符号变为<%>编码的的形式
                 components.append((escape(key), escape(boolEncoding.encode(value: number.boolValue))))
             } else {
                 components.append((escape(key), escape("\(number)")))

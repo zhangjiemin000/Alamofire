@@ -34,6 +34,7 @@ public protocol URLConvertible {
     func asURL() throws -> URL
 }
 
+///这里就默认给String提供了一个URLConvertible的方法
 extension String: URLConvertible {
     /// Returns a `URL` if `self` can be used to initialize a `URL` instance, otherwise throws.
     ///
@@ -78,7 +79,7 @@ extension URLRequestConvertible {
     /// The `URLRequest` returned by discarding any `Error` encountered.
     public var urlRequest: URLRequest? { try? asURLRequest() }
 }
-
+//默认给URLRequest给了一个URLConverable的方法
 extension URLRequest: URLRequestConvertible {
     /// Returns `self`.
     public func asURLRequest() throws -> URLRequest { self }
