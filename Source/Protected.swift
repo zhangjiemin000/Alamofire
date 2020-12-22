@@ -24,11 +24,12 @@
 
 import Foundation
 
+///通用的Lock协议，仅有两个方法，一个lock，和一个unlock
 private protocol Lock {
     func lock()
     func unlock()
 }
-
+///这里又扩展了LOCK的协议
 extension Lock {
     /// Executes a closure returning a value while acquiring the lock.
     ///
@@ -84,11 +85,14 @@ final class MutexLock: Lock {
 
 #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
 /// An `os_unfair_lock` wrapper.
+/// 不公平锁
 final class UnfairLock: Lock {
     private let unfairLock: os_unfair_lock_t
 
     init() {
+        //先alloc存储
         unfairLock = .allocate(capacity: 1)
+        //再初始化成这个锁
         unfairLock.initialize(to: os_unfair_lock())
     }
 
@@ -108,10 +112,14 @@ final class UnfairLock: Lock {
 #endif
 
 /// A thread-safe wrapper around a value.
+/// protected就是泛型化的 wrapper过的 lock
+/// 并且还具备subcript功能
+/// 并且还不让继承
 @propertyWrapper
 @dynamicMemberLookup
 final class Protected<T> {
     #if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    //自旋锁(解决了优先级反转的自旋锁)
     private let lock = UnfairLock()
     #elseif os(Linux)
     private let lock = MutexLock()
@@ -150,7 +158,7 @@ final class Protected<T> {
     /// - Returns:           The modified value.
     @discardableResult
     func write<U>(_ closure: (inout T) -> U) -> U {
-        lock.around { closure(&self.value) }
+        lock.around { closure(&self.value) } //因为是inout属性的T，所以需要取地址
     }
 
     subscript<Property>(dynamicMember keyPath: WritableKeyPath<T, Property>) -> Property {
@@ -164,7 +172,7 @@ extension Protected where T: RangeReplaceableCollection {
     ///
     /// - Parameter newElement: The `Element` to append.
     func append(_ newElement: T.Element) {
-        write { (ward: inout T) in
+        write { (ward: inout T) in //原来 inout是这么个用法
             ward.append(newElement)
         }
     }

@@ -84,7 +84,7 @@ public class Request {
     // MARK: - Mutable State
 
     /// Type encapsulating all mutable state that may need to be accessed from anything other than the `underlyingQueue`.
-    struct MutableState {
+    public struct MutableState {
         /// State of the `Request`.
         var state: State = .initialized
         /// `ProgressHandler` and `DispatchQueue` provided for upload progress callbacks.
@@ -119,9 +119,15 @@ public class Request {
         /// Whether the instance has had `finish()` called and is running the serializers. Should be replaced with a
         /// representation in the state machine in the future.
         var isFinishing = false
+        //如果你不显示的指定这个init，那么这个方法默认就是internal的
+        public init() {
+
+        }
     }
 
     /// Protected `MutableState` value that provides thread-safe access to state values.
+    /// 这个就很关键了，相当于给mutableState这里就套用了propertyWrapper，领教了
+    /// 并且@propertyWrapper不仅能重写set get 方法， 还可以扩充方法，实际上应该是把property修饰的整个作为Protocol动态套上去了
     @Protected
     fileprivate var mutableState = MutableState()
 
