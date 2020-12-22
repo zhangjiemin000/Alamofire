@@ -210,6 +210,7 @@ public class Request {
     /// `requests` due to `URLSession` manipulation.
     /// 这里的read是加锁
     /// 这里的意思是： 对mutableState的tasks数组中，task的currentResult不为nil的对象，重新组成一个数组
+    /// performedRequest的时候，会对request列表加锁，这个表示已经执行的Request
     public var performedRequests: [URLRequest] { $mutableState.read { $0.tasks.compactMap { $0.currentRequest } } }
 
     // MARK: HTTPURLResponse
@@ -221,6 +222,7 @@ public class Request {
     // MARK: Tasks
 
     /// All `URLSessionTask`s created on behalf of the `Request`.
+    /// 所有的task都是通过Request行为来创建的
     public var tasks: [URLSessionTask] { mutableState.tasks }
     /// First `URLSessionTask` created on behalf of the `Request`.
     public var firstTask: URLSessionTask? { tasks.first }
@@ -290,7 +292,7 @@ public class Request {
     /// - Parameter request: The `URLRequest` created.
     func didCreateInitialURLRequest(_ request: URLRequest) {
         dispatchPrecondition(condition: .onQueue(underlyingQueue))
-        //加锁，加入request
+        //加锁，加入request,这里的$应该就是指向@Protected类，所以通过这个可以直接使用Protected对象方法
         $mutableState.write { $0.requests.append(request) }
         //事件，创建了request
         eventMonitor?.request(self, didCreateInitialURLRequest: request)

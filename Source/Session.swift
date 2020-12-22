@@ -1068,7 +1068,7 @@ open class Session {
     }
 
     // MARK: - Task Handling
-
+    ///这里是真正执行网络请求的地方，这样路径大致脉络就清楚了。
     func didCreateURLRequest(_ urlRequest: URLRequest, for request: Request) {
         dispatchPrecondition(condition: .onQueue(rootQueue))
 
